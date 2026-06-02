@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SantoPet — Gestão de Pet Shop</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     TELA DE LOGIN
+══════════════════════════════════════════════════════════ -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">Santo<span>Pet</span></div>
+    <div class="login-sub">Sistema de Gestão</div>
+
+    <div id="login-erro" class="alert alert-danger hidden"></div>
+
+    <form id="form-login" onsubmit="fazerLogin(event)">
+      <div class="form-group">
+        <label>Usuário</label>
+        <input type="text" id="login-usuario" name="usuario" autocomplete="username" required placeholder="seu usuário">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="login-senha" name="senha" autocomplete="current-password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block mt-16">Entrar</button>
+    </form>
+    <p class="text-muted mt-8" style="font-size:12px;text-align:center">v1.0.0</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APLICAÇÃO PRINCIPAL
+══════════════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- HEADER -->
+  <div id="header">
+    <div class="logo">Santo<span>Pet</span></div>
+    <div class="user-info">
+      <span id="header-usuario"></span>
+      <span id="header-perfil" class="badge badge-blue"></span>
+      <button onclick="Auth.logout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <nav>
+      <ul>
+        <li><div class="nav-section">Principal</div></li>
+        <li><a href="#" data-page="dashboard" onclick="Router.ir('dashboard');return false;">🏠 Dashboard</a></li>
+
+        <li><div class="nav-section">Cadastros</div></li>
+        <li><a href="#" data-page="clientes"  onclick="Router.ir('clientes');return false;">🐾 Clientes</a></li>
+        <li><a href="#" data-page="servicos"  onclick="Router.ir('servicos');return false;">✂ Serviços</a></li>
+
+        <li><div class="nav-section">Financeiro</div></li>
+        <li><a href="#" data-page="receitas"  onclick="Router.ir('receitas');return false;">💰 Receitas</a></li>
+        <li><a href="#" data-page="despesas"  onclick="Router.ir('despesas');return false;">📋 Despesas</a></li>
+
+        <li><div class="nav-section">Estoque</div></li>
+        <li><a href="#" data-page="estoque"   onclick="Router.ir('estoque');return false;">📦 Estoque</a></li>
+
+        <li><div class="nav-section">Análises</div></li>
+        <li><a href="#" data-page="relatorios" onclick="Router.ir('relatorios');return false;">📊 Relatórios</a></li>
+
+        <li><div class="nav-section">Sistema</div></li>
+        <li><a href="#" data-page="config"    onclick="Router.ir('config');return false;" id="menu-config">⚙ Configurações</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <div id="main">
+
+    <!-- ── DASHBOARD ─────────────────────────────────────── -->
+    <div id="page-dashboard" class="page">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <button class="btn btn-secondary btn-sm" onclick="Dashboard.carregar()">↻ Atualizar</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Atendimentos Hoje</div>
+          <div class="kpi-value" id="kpi-svc-hoje">—</div>
+        </div>
+        <div class="kpi-card accent">
+          <div class="kpi-label">Receita Hoje</div>
+          <div class="kpi-value" id="kpi-rec-hoje">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Receita do Mês</div>
+          <div class="kpi-value green" id="kpi-rec-mes">—</div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-label">Despesas do Mês</div>
+          <div class="kpi-value" id="kpi-desp-mes">—</div>
+        </div>
+        <div class="kpi-card info">
+          <div class="kpi-label">Lucro do Mês</div>
+          <div class="kpi-value" id="kpi-lucro-mes">—</div>
+        </div>
+        <div class="kpi-card danger">
+          <div class="kpi-label">Alertas de Estoque</div>
+          <div class="kpi-value" id="kpi-alertas">—</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Últimos Atendimentos</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Cliente</th><th>Animal</th><th>Serviço</th><th>Valor</th></tr></thead>
+            <tbody id="dash-atendimentos"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLIENTES ──────────────────────────────────────── -->
+    <div id="page-clientes" class="page">
+      <div class="page-header">
+        <div class="page-title">🐾 Clientes</div>
+        <button class="btn btn-primary" onclick="Clientes.novo()">+ Novo Cliente</button>
+      </div>
+
+      <div class="section">
+        <div class="filter-bar">
+          <input type="text" id="cli-busca" placeholder="Buscar por nome, animal ou telefone..." style="flex:1;min-width:200px" onkeyup="clearTimeout(window._ct);window._ct=setTimeout(Clientes.buscar,400)">
+          <button class="btn btn-secondary" onclick="Clientes.buscar()">Buscar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th><th>Animal</th><th>Espécie</th><th>Raça</th>
+                <th>Telefone</th><th>WhatsApp</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="cli-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="cli-paginacao"></div>
+      </div>
+    </div>
+
+    <!-- ── SERVIÇOS ──────────────────────────────────────── -->
+    <div id="page-servicos" class="page">
+      <div class="page-header">
+        <div class="page-title">✂ Serviços</div>
+        <button class="btn btn-primary" onclick="Servicos.novo()">+ Novo Serviço</button>
+      </div>
+
+      <div class="section">
+        <div class="filter-bar">
+          <div>
+            <label style="font-size:12px;color:#757575">De</label>
+            <input type="date" id="svc-data-inicio">
+          </div>
+          <div>
+            <label style="font-size:12px;color:#757575">Até</label>
+            <input type="date" id="svc-data-fim">
+          </div>
+          <input type="text" id="svc-busca" placeholder="Buscar cliente ou animal..." style="flex:1;min-width:150px">
+          <button class="btn btn-secondary" onclick="Servicos.carregar(1)">Filtrar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Data</th><th>Cliente</th><th>Animal</th><th>Serviço</th><th>Pagamento</th><th>Valor</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="svc-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="svc-paginacao"></div>
+      </div>
+    </div>
+
+    <!-- ── RECEITAS ──────────────────────────────────────── -->
+    <div id="page-receitas" class="page">
+      <div class="page-header">
+        <div class="page-title">💰 Receitas</div>
+        <button class="btn btn-primary" onclick="Receitas.novo()">+ Nova Receita</button>
+      </div>
+
+      <div class="section">
+        <div class="filter-bar">
+          <div>
+            <label style="font-size:12px;color:#757575">De</label>
+            <input type="date" id="rec-data-inicio">
+          </div>
+          <div>
+            <label style="font-size:12px;color:#757575">Até</label>
+            <input type="date" id="rec-data-fim">
+          </div>
+          <button class="btn btn-secondary" onclick="Receitas.carregar()">Filtrar</button>
+          <span style="margin-left:auto;font-weight:bold;color:#2e7d32">Total: <span id="rec-total">R$ 0,00</span></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Data</th><th>Cliente</th><th>Descrição</th><th>Pagamento</th><th>Valor</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="rec-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DESPESAS ──────────────────────────────────────── -->
+    <div id="page-despesas" class="page">
+      <div class="page-header">
+        <div class="page-title">📋 Despesas</div>
+        <button class="btn btn-primary" onclick="Despesas.novo()">+ Nova Despesa</button>
+      </div>
+
+      <div class="section">
+        <div class="filter-bar">
+          <div>
+            <label style="font-size:12px;color:#757575">De</label>
+            <input type="date" id="desp-data-inicio">
+          </div>
+          <div>
+            <label style="font-size:12px;color:#757575">Até</label>
+            <input type="date" id="desp-data-fim">
+          </div>
+          <button class="btn btn-secondary" onclick="Despesas.carregar()">Filtrar</button>
+          <span style="margin-left:auto;font-weight:bold;color:#c62828">Total: <span id="desp-total">R$ 0,00</span></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Data</th><th>Categoria</th><th>Descrição</th><th>Observação</th><th>Valor</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="desp-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ESTOQUE ───────────────────────────────────────── -->
+    <div id="page-estoque" class="page">
+      <div class="page-header">
+        <div class="page-title">📦 Estoque</div>
+        <button class="btn btn-primary" onclick="Estoque.novoProduto()">+ Novo Produto</button>
+      </div>
+
+      <div id="est-alertas" class="alert alert-warning hidden"></div>
+
+      <div class="section">
+        <div class="filter-bar">
+          <input type="text" id="est-busca" placeholder="Buscar produto ou categoria..." style="flex:1;min-width:200px">
+          <button class="btn btn-secondary" onclick="Estoque.carregar()">Buscar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Produto</th><th>Categoria</th><th>Qtd Atual</th><th>Qtd Mín.</th><th>Vl Compra</th><th>Vl Venda</th><th>Fornecedor</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="est-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RELATÓRIOS ────────────────────────────────────── -->
+    <div id="page-relatorios" class="page">
+      <div class="page-header">
+        <div class="page-title">📊 Relatórios</div>
+      </div>
+
+      <div class="report-tabs">
+        <button id="tab-btn-servicos"   onclick="Relatorios.mostrarAba('servicos')"   class="active">Serviços</button>
+        <button id="tab-btn-financeiro" onclick="Relatorios.mostrarAba('financeiro')">Financeiro</button>
+        <button id="tab-btn-estoque"    onclick="Relatorios.mostrarAba('estoque')">Estoque</button>
+      </div>
+
+      <!-- Tab Serviços -->
+      <div id="tab-servicos" class="report-tab-content active">
+        <div class="section">
+          <div class="filter-bar">
+            <div><label style="font-size:12px;color:#757575">De</label><input type="date" id="rel-svc-di"></div>
+            <div><label style="font-size:12px;color:#757575">Até</label><input type="date" id="rel-svc-df"></div>
+            <button class="btn btn-primary" onclick="Relatorios.gerarServicos()">Gerar Relatório</button>
+          </div>
+          <div id="rel-svc-resumo" class="mb-16"></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Cliente</th><th>Animal</th><th>Serviço</th><th>Pagamento</th><th>Valor</th></tr></thead>
+              <tbody id="rel-svc-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Financeiro -->
+      <div id="tab-financeiro" class="report-tab-content">
+        <div class="section">
+          <div class="filter-bar">
+            <div><label style="font-size:12px;color:#757575">De</label><input type="date" id="rel-fin-di"></div>
+            <div><label style="font-size:12px;color:#757575">Até</label><input type="date" id="rel-fin-df"></div>
+            <button class="btn btn-primary" onclick="Relatorios.gerarFinanceiro()">Gerar Relatório</button>
+          </div>
+          <div class="kpi-grid" style="margin-bottom:16px">
+            <div class="kpi-card"><div class="kpi-label">Receitas</div><div class="kpi-value green" id="rel-fin-receitas">—</div></div>
+            <div class="kpi-card danger"><div class="kpi-label">Despesas</div><div class="kpi-value red" id="rel-fin-despesas">—</div></div>
+            <div class="kpi-card info"><div class="kpi-label">Lucro Líquido</div><div class="kpi-value" id="rel-fin-lucro">—</div></div>
+          </div>
+          <div class="form-row">
+            <div>
+              <div class="section-title">Despesas por Categoria</div>
+              <div id="rel-fin-categorias"></div>
+            </div>
+            <div>
+              <div class="section-title">Receitas do Período</div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Data</th><th>Cliente</th><th>Descrição</th><th>Valor</th></tr></thead>
+                  <tbody id="rel-rec-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Estoque -->
+      <div id="tab-estoque" class="report-tab-content">
+        <div class="section">
+          <div class="filter-bar">
+            <button class="btn btn-primary" onclick="Relatorios.gerarEstoque()">Gerar Relatório</button>
+            <span>Valor total em estoque: <strong id="rel-est-total">—</strong></span>
+            <span style="color:#c62828">Abaixo do mínimo: <strong id="rel-est-alertas">—</strong></span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Produto</th><th>Categoria</th><th>Qtd</th><th>Mín.</th><th>Vl Compra</th><th>Vl Venda</th></tr></thead>
+              <tbody id="rel-est-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CONFIGURAÇÕES ─────────────────────────────────── -->
+    <div id="page-config" class="page">
+      <div class="page-header">
+        <div class="page-title">⚙ Configurações</div>
+        <button class="btn btn-primary" onclick="Config.novoUsuario()">+ Novo Usuário</button>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Usuários do Sistema</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Último Acesso</th><th>Ações</th></tr></thead>
+            <tbody id="usr-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════════════════
+     MODAIS
+══════════════════════════════════════════════════════════ -->
+
+<!-- Modal Cliente -->
+<div id="modal-cliente" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-cliente-titulo">Novo Cliente</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-cliente')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-cliente">
+        <input type="hidden" id="form-cliente-id" name="id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nome do Cliente *</label>
+            <input type="text" name="nome_cliente" required>
+          </div>
+          <div class="form-group">
+            <label>Nome do Animal</label>
+            <input type="text" name="nome_animal">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Espécie</label>
+            <select name="especie">
+              <option value="">— Selecione —</option>
+              <option>Cachorro</option>
+              <option>Gato</option>
+              <option>Pássaro</option>
+              <option>Coelho</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Raça</label>
+            <input type="text" name="raca">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="tel" name="telefone">
+          </div>
+          <div class="form-group">
+            <label>WhatsApp</label>
+            <input type="tel" name="whatsapp">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Observações</label>
+          <textarea name="observacoes" rows="3"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Clientes.salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Serviço -->
+<div id="modal-servico" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Novo Serviço</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-servico')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-servico">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data *</label>
+            <input type="date" id="svc-data" name="data" required>
+          </div>
+          <div class="form-group">
+            <label>Tipo de Serviço *</label>
+            <select name="tipo_servico" required>
+              <option value="">— Selecione —</option>
+              <option>Banho</option>
+              <option>Tosa</option>
+              <option>Banho e Tosa</option>
+              <option>Consulta</option>
+              <option>Hospedagem</option>
+              <option>Venda de Produto</option>
+              <option>Outros</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Cliente *</label>
+          <select id="svc-id-cliente" name="id_cliente" required onchange="Servicos.onClienteChange()">
+            <option value="">— Selecione o cliente —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Animal</label>
+          <input type="text" id="svc-nome-animal" name="nome_animal">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor (R$) *</label>
+            <input type="number" name="valor" step="0.01" min="0" required>
+          </div>
+          <div class="form-group">
+            <label>Forma de Pagamento</label>
+            <select name="forma_pagamento">
+              <option value="">— Selecione —</option>
+              <option>Dinheiro</option>
+              <option>Pix</option>
+              <option>Cartão Débito</option>
+              <option>Cartão Crédito</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descrição / Observações</label>
+          <textarea name="descricao" rows="2"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-servico')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Servicos.salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Receita -->
+<div id="modal-receita" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Nova Receita</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-receita')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-receita">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data *</label>
+            <input type="date" id="rec-form-data" name="data" required>
+          </div>
+          <div class="form-group">
+            <label>Valor (R$) *</label>
+            <input type="number" name="valor" step="0.01" min="0" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Cliente</label>
+          <input type="text" name="nome_cliente">
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" name="descricao">
+        </div>
+        <div class="form-group">
+          <label>Forma de Pagamento</label>
+          <select name="forma_pagamento">
+            <option value="">— Selecione —</option>
+            <option>Dinheiro</option><option>Pix</option>
+            <option>Cartão Débito</option><option>Cartão Crédito</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-receita')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Receitas.salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Despesa -->
+<div id="modal-despesa" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-desp-titulo">Nova Despesa</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-despesa')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-despesa">
+        <input type="hidden" id="desp-form-id" name="id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Data *</label>
+            <input type="date" id="desp-form-data" name="data" required>
+          </div>
+          <div class="form-group">
+            <label>Valor (R$) *</label>
+            <input type="number" name="valor" step="0.01" min="0" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Categoria *</label>
+          <select name="categoria" required>
+            <option value="">— Selecione —</option>
+            <option>Aluguel</option><option>Água</option><option>Energia</option>
+            <option>Produtos</option><option>Funcionários</option>
+            <option>Impostos</option><option>Outros</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descrição</label>
+          <input type="text" name="descricao">
+        </div>
+        <div class="form-group">
+          <label>Observação</label>
+          <textarea name="observacao" rows="2"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-despesa')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Despesas.salvar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Produto -->
+<div id="modal-produto" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-prod-titulo">Novo Produto</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-produto')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-produto">
+        <input type="hidden" id="prod-form-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Produto *</label>
+            <input type="text" name="produto" required>
+          </div>
+          <div class="form-group">
+            <label>Categoria</label>
+            <select name="categoria">
+              <option value="">— Selecione —</option>
+              <option>Ração</option><option>Higiene</option>
+              <option>Acessórios</option><option>Medicamentos</option><option>Outros</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Qtd Atual</label>
+            <input type="number" name="quantidade_atual" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Qtd Mínima</label>
+            <input type="number" name="quantidade_minima" min="0" value="0">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Valor de Compra (R$)</label>
+            <input type="number" name="valor_compra" step="0.01" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Valor de Venda (R$)</label>
+            <input type="number" name="valor_venda" step="0.01" min="0" value="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Fornecedor</label>
+          <input type="text" name="fornecedor">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Estoque.salvarProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Movimentação de Estoque -->
+<div id="modal-movimentacao" class="modal-overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3>Movimentação de Estoque</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-movimentacao')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="mov-id-produto">
+      <div class="form-group">
+        <label>Produto</label>
+        <input type="text" id="mov-nome-produto" readonly style="background:#f5f5f5">
+      </div>
+      <div class="form-group">
+        <label>Tipo de Movimentação</label>
+        <select id="mov-tipo">
+          <option value="ENTRADA">Entrada</option>
+          <option value="SAIDA">Saída</option>
+          <option value="AJUSTE">Ajuste (definir quantidade exata)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantidade *</label>
+        <input type="number" id="mov-quantidade" min="0.01" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label>Motivo / Observação</label>
+        <input type="text" id="mov-motivo">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-movimentacao')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Estoque.salvarMovimentacao()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Usuário -->
+<div id="modal-usuario" class="modal-overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h3 id="modal-usr-titulo">Novo Usuário</h3>
+      <button class="close-btn" onclick="Utils.fecharModal('modal-usuario')">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="form-usuario">
+        <input type="hidden" id="usr-form-id">
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" name="nome" required>
+        </div>
+        <div class="form-group">
+          <label>Usuário (login) *</label>
+          <input type="text" name="usuario" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Senha <span style="font-size:11px;color:#757575">(deixe em branco para manter)</span></label>
+          <input type="password" name="senha" autocomplete="new-password">
+        </div>
+        <div class="form-group">
+          <label>Perfil *</label>
+          <select name="perfil" required>
+            <option value="">— Selecione —</option>
+            <option value="ADMIN">Administrador</option>
+            <option value="OPERADOR">Operador</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="ativo">
+            <option value="TRUE">Ativo</option>
+            <option value="FALSE">Inativo</option>
+          </select>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="Utils.fecharModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary"   onclick="Config.salvarUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     ELEMENTOS GLOBAIS
+══════════════════════════════════════════════════════════ -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <span style="color:#757575;font-size:13px">Aguarde...</span>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════════════════ -->
+<script src="js/api.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/modules/dashboard.js"></script>
+<script src="js/modules/clientes.js"></script>
+<script src="js/modules/servicos.js"></script>
+<script src="js/modules/financeiro.js"></script>
+<script src="js/modules/estoque.js"></script>
+<script src="js/modules/relatorios.js"></script>
+
+<script>
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+
+// <<< PREENCHA COM A URL DO SEU GOOGLE APPS SCRIPT >>>
+var GAS_URL = '';
+
+window.addEventListener('DOMContentLoaded', function() {
+  // Carrega a URL salva (pode ser configurada pelo usuário na primeira vez)
+  var url = localStorage.getItem('sp_gas_url') || GAS_URL;
+  if (url) {
+    API.setUrl(url);
+    sessionStorage.setItem('sp_gas_url', url);
+  }
+
+  if (!url) {
+    var inputUrl = prompt('Configure a URL da API (Google Apps Script):\n\nCole a URL do Web App publicado:');
+    if (inputUrl) {
+      localStorage.setItem('sp_gas_url', inputUrl);
+      sessionStorage.setItem('sp_gas_url', inputUrl);
+      API.setUrl(inputUrl);
+    }
+  }
+
+  if (Auth.isLogado()) {
+    mostrarApp();
+    Router.ir('dashboard');
+  }
+});
+
+function fazerLogin(e) {
+  e.preventDefault();
+  var erroEl = document.getElementById('login-erro');
+  erroEl.classList.add('hidden');
+
+  var usuario = document.getElementById('login-usuario').value;
+  var senha    = document.getElementById('login-senha').value;
+
+  Auth.login(usuario, senha, function(ok, res) {
+    if (ok) {
+      mostrarApp();
+      Router.ir('dashboard');
+    } else {
+      erroEl.textContent = res.erro || 'Erro ao fazer login.';
+      erroEl.classList.remove('hidden');
+    }
+  });
+}
+
+function mostrarApp() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('header-usuario').textContent = sessionStorage.getItem('sp_nome') || sessionStorage.getItem('sp_usuario');
+  document.getElementById('header-perfil').textContent  = sessionStorage.getItem('sp_perfil') || '';
+
+  // Esconde config se não for admin
+  if (Auth.getPerfil() !== 'ADMIN') {
+    var menuConfig = document.getElementById('menu-config');
+    if (menuConfig) menuConfig.parentElement.style.display = 'none';
+  }
+
+  // Preenche datas padrão nos filtros
+  var hoje = Utils.dataHoje();
+  var primDia = Utils.primeiroDiaMes();
+  var campoDatas = [
+    ['svc-data-inicio', primDia], ['svc-data-fim', hoje],
+    ['rec-data-inicio', primDia], ['rec-data-fim', hoje],
+    ['desp-data-inicio', primDia], ['desp-data-fim', hoje],
+    ['rel-svc-di', primDia], ['rel-svc-df', hoje],
+    ['rel-fin-di', primDia], ['rel-fin-df', hoje]
+  ];
+  campoDatas.forEach(function(par) {
+    var el = document.getElementById(par[0]);
+    if (el && !el.value) el.value = par[1];
+  });
+}
+</script>
+
+</body>
+</html>
