@@ -175,7 +175,7 @@ function gerarToken(usuario, perfil) {
   var hash = bytes.map(function(b) {
     return ('0' + (b & 0xFF).toString(16)).slice(-2);
   }).join('');
-  var token = btoa(payload) + '.' + hash.substr(0, 16);
+  var token = Utilities.base64Encode(payload) + '.' + hash.substr(0, 16);
   var cache = CacheService.getScriptCache();
   cache.put('token_' + token, JSON.stringify({ usuario: usuario, perfil: perfil }), 28800); // 8h
   return token;
