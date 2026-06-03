@@ -33,6 +33,7 @@ var API = (function() {
 
     return fetch(GAS_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(body)
     })
     .then(function(r) { return r.json(); })
