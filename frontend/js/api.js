@@ -3,7 +3,7 @@
 // ============================================================
 
 var API = (function() {
-  var GAS_URL = 'https://script.google.com/macros/s/AKfycbwskFDW8Swt_BWaZjPOK26eB1YTHikG1IZBe8B0mq3HbY_kfjrm9JUTk3pjFz299rby6w/exec'; // <<< Preencher após publicar o GAS
+  var GAS_URL = 'https://script.google.com/macros/s/AKfycbzxICdmXQX2p2jbFuDl26MVSVa2_FBRmIb4rlXiGebUZIRQvABHQIoTIzzeWSqGVmw1Vg/exec'; // <<< Preencher após publicar o GAS
 
   function getToken() {
     return sessionStorage.getItem('sp_token') || '';
