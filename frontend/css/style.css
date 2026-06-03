@@ -10,9 +10,9 @@
 }
 
 :root {
-  --primary:    #2e7d32;
-  --primary-dk: #1b5e20;
-  --primary-lt: #e8f5e9;
+  --primary:    #55CFC2;
+  --primary-dk: #38B8AA;
+  --primary-lt: #E8FAF8;
   --accent:     #ff8f00;
   --danger:     #c62828;
   --text:       #212121;
@@ -52,12 +52,15 @@ a:hover { text-decoration: underline; }
 }
 
 #header .logo {
-  font-size: 20px;
-  font-weight: bold;
   flex: 1;
+  display: flex;
+  align-items: center;
 }
 
-#header .logo span { color: var(--accent); }
+#header .logo img {
+  height: 36px;
+  width: auto;
+}
 
 #header .user-info {
   display: flex;
@@ -145,14 +148,11 @@ a:hover { text-decoration: underline; }
   text-align: center;
 }
 
-.login-box .login-logo {
-  font-size: 28px;
-  font-weight: bold;
-  color: var(--primary);
+.login-box .login-logo img {
+  max-width: 180px;
+  height: auto;
   margin-bottom: 4px;
 }
-
-.login-box .login-logo span { color: var(--accent); }
 
 .login-box .login-sub {
   color: var(--text-muted);
