@@ -762,21 +762,7 @@
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbwimfqp4BD9NBPP222zXZrpJgbAdVS6aQ3DEJOX_fpcXnzqskOkRcwAeowKwNR4DzBDXQ/exec';
 
 window.addEventListener('DOMContentLoaded', function() {
-  // Carrega a URL salva (pode ser configurada pelo usuário na primeira vez)
-  var url = localStorage.getItem('sp_gas_url') || GAS_URL;
-  if (url) {
-    API.setUrl(url);
-    sessionStorage.setItem('sp_gas_url', url);
-  }
-
-  if (!url) {
-    var inputUrl = prompt('Configure a URL da API (Google Apps Script):\n\nCole a URL do Web App publicado:');
-    if (inputUrl) {
-      localStorage.setItem('sp_gas_url', inputUrl);
-      sessionStorage.setItem('sp_gas_url', inputUrl);
-      API.setUrl(inputUrl);
-    }
-  }
+  API.setUrl(GAS_URL);
 
   if (Auth.isLogado()) {
     mostrarApp();

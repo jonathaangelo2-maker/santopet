@@ -3,8 +3,10 @@
 // Versão: 1.0.0
 // ============================================================
 
-var SPREADSHEET_ID = '1cLFMxnBN6eZFEn14KVzFRyiFs2FwfIpnzkyTm49w0co'; // <<< PREENCHA COM O ID DA SUA PLANILHA
-var SECRET_KEY = 'santopet2026secretkey'; // <<< ALTERE ESTA CHAVE
+var SPREADSHEET_ID = '1cLFMxnBN6eZFEn14KVzFRyiFs2FwfIpnzkyTm49w0co';
+// SECRET_KEY lido das Propriedades do Script (Configurações do projeto → Propriedades do script)
+// Para definir: no GAS, vá em Projeto → Configurações → Propriedades do script → adicione SECRET_KEY
+var SECRET_KEY = PropertiesService.getScriptProperties().getProperty('SECRET_KEY') || 'santopet2026secretkey';
 
 // ============================================================
 // ROTEADOR PRINCIPAL
@@ -201,6 +203,14 @@ function handleLogin(params) {
 
   if (!usuario || !senha) return { ok: false, erro: 'Usuário e senha são obrigatórios.' };
 
+  // Rate limiting: máx 5 tentativas em 15 minutos por usuário
+  var cache = CacheService.getScriptCache();
+  var chaveRl = 'rl_' + usuario;
+  var tentativas = parseInt(cache.get(chaveRl) || '0');
+  if (tentativas >= 5) {
+    return { ok: false, erro: 'Conta bloqueada temporariamente. Tente novamente em 15 minutos.' };
+  }
+
   var sheet = getSheet('Usuarios');
   var registros = sheetParaObjetos(sheet);
   var hash = hashSenha(senha);
@@ -208,6 +218,7 @@ function handleLogin(params) {
   for (var i = 0; i < registros.length; i++) {
     var u = registros[i];
     if (String(u.usuario).toLowerCase() === usuario && String(u.senha_hash) === hash && String(u.ativo).toUpperCase() === 'TRUE') {
+      cache.remove(chaveRl); // Limpa contador de falhas
       var token = gerarToken(u.usuario, u.perfil);
       // Atualiza último acesso
       var linha = encontrarLinha(sheet, 2, u.usuario); // col C = índice 2
@@ -216,7 +227,10 @@ function handleLogin(params) {
       return { ok: true, token: token, usuario: u.usuario, nome: u.nome, perfil: u.perfil };
     }
   }
-  registrarLog(usuario, 'LOGIN_FALHA', 'Autenticacao', 'Tentativa inválida', '', '');
+
+  // Incrementa contador de falhas
+  cache.put(chaveRl, String(tentativas + 1), 900); // 15 minutos
+  registrarLog(usuario, 'LOGIN_FALHA', 'Autenticacao', 'Tentativa ' + (tentativas + 1) + ' inválida', '', '');
   return { ok: false, erro: 'Usuário ou senha inválidos.' };
 }
 

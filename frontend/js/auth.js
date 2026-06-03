@@ -14,7 +14,7 @@ var Auth = (function() {
 
   function login(usuario, senha, callback) {
     Utils.loading(true);
-    API.get('login', { usuario: usuario, senha: senha }).then(function(res) {
+    API.loginPost(usuario, senha).then(function(res) {
       Utils.loading(false);
       if (res.ok) {
         sessionStorage.setItem('sp_token',   res.token);

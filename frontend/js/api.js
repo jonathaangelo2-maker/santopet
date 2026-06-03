@@ -40,7 +40,18 @@ var API = (function() {
     .catch(function() { return { ok: false, erro: 'Erro de conexão.' }; });
   }
 
+  function loginPost(usuario, senha) {
+    var body = { action: 'login', usuario: usuario, senha: senha };
+    return fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .catch(function() { return { ok: false, erro: 'Erro de conexão.' }; });
+  }
+
   function setUrl(url) { GAS_URL = url; }
 
-  return { get: get, post: post, setUrl: setUrl, getToken: getToken, getUsuario: getUsuario };
+  return { get: get, post: post, loginPost: loginPost, setUrl: setUrl, getToken: getToken, getUsuario: getUsuario };
 })();
