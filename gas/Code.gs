@@ -808,3 +808,21 @@ function backupSemanal() {
   ss.copy(nome);
   registrarLog('SISTEMA', 'BACKUP', 'Sistema', 'Backup criado: ' + nome, '', '');
 }
+
+// ============================================================
+// UTILITÁRIO — Rodar UMA VEZ após trocar a SECRET_KEY
+// Executa no editor GAS: selecione a função e clique em Executar
+// ============================================================
+
+function redefinirSenhaAdmin() {
+  var sheet = getSheet('Usuarios');
+  var linha = encontrarLinha(sheet, 2, 'admin'); // col C = usuario
+  if (linha < 0) {
+    Logger.log('Admin não encontrado. Criando...');
+    sheet.appendRow([gerarId('USR'), 'Administrador', 'admin', hashSenha('admin123'), 'ADMIN', 'TRUE', hoje(), '']);
+    Logger.log('Admin criado com senha: admin123');
+  } else {
+    sheet.getRange(linha, 4).setValue(hashSenha('admin123'));
+    Logger.log('Hash do admin atualizado com a nova SECRET_KEY. Senha: admin123');
+  }
+}
