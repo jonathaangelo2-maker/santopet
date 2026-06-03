@@ -3,7 +3,7 @@
 // Versão: 1.0.0
 // ============================================================
 
-var SPREADSHEET_ID = ''; // <<< PREENCHA COM O ID DA SUA PLANILHA
+var SPREADSHEET_ID = '1cLFMxnBN6eZFEn14KVzFRyiFs2FwfIpnzkyTm49w0co'; // <<< PREENCHA COM O ID DA SUA PLANILHA
 var SECRET_KEY = 'santopet2026secretkey'; // <<< ALTERE ESTA CHAVE
 
 // ============================================================
@@ -207,7 +207,7 @@ function handleLogin(params) {
 
   for (var i = 0; i < registros.length; i++) {
     var u = registros[i];
-    if (String(u.usuario).toLowerCase() === usuario && String(u.senha_hash) === hash && String(u.ativo) === 'TRUE') {
+    if (String(u.usuario).toLowerCase() === usuario && String(u.senha_hash) === hash && String(u.ativo).toUpperCase() === 'TRUE') {
       var token = gerarToken(u.usuario, u.perfil);
       // Atualiza último acesso
       var linha = encontrarLinha(sheet, 2, u.usuario); // col C = índice 2
@@ -247,7 +247,7 @@ function registrarLog(usuario, acao, modulo, descricao, dadoAnterior, dadoNovo) 
 function listarClientes(params) {
   var sheet = getSheet('Clientes');
   var todos = sheetParaObjetos(sheet);
-  var ativos = todos.filter(function(c) { return String(c.ativo) === 'TRUE'; });
+  var ativos = todos.filter(function(c) { return String(c.ativo).toUpperCase() === 'TRUE'; });
 
   var busca = (params.busca || '').toLowerCase();
   if (busca) {
@@ -518,7 +518,7 @@ function resumoFinanceiro(params) {
 function listarEstoque(params) {
   var sheet = getSheet('Estoque');
   var todos = sheetParaObjetos(sheet);
-  var ativos = todos.filter(function(p) { return String(p.ativo) === 'TRUE'; });
+  var ativos = todos.filter(function(p) { return String(p.ativo).toUpperCase() === 'TRUE'; });
 
   var busca = (params.busca || '').toLowerCase();
   if (busca) {
@@ -711,7 +711,7 @@ function relatorioFinanceiro(params) {
 
 function relatorioEstoque(params) {
   var sheet = getSheet('Estoque');
-  var todos = sheetParaObjetos(sheet).filter(function(p) { return String(p.ativo) === 'TRUE'; });
+  var todos = sheetParaObjetos(sheet).filter(function(p) { return String(p.ativo).toUpperCase() === 'TRUE'; });
   var abaixoMinimo = todos.filter(function(p) {
     return parseFloat(p.quantidade_atual) <= parseFloat(p.quantidade_minima);
   });
